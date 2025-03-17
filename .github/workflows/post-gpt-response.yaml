@@ -1,0 +1,37 @@
+name: Post GPT Response
+
+# This workflow can be manually triggered.
+on:
+  workflow_dispatch:
+    inputs:
+      gpt_response:
+        description: 'GPT response text'
+        required: true
+        default: ''
+
+jobs:
+  post-response:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Write GPT response file to existing folder
+        run: |
+          # Use the provided input or fall back to a secret if you prefer.
+          RESPONSE="${{ github.event.inputs.gpt_response || secrets.CUSTOM_GPT_RESPONSE }}"
+          # Define the filename with a timestamp.
+          filename="posts/$(date +'%Y-%m-%d_%H-%M-%S').md"
+          echo "$RESPONSE" > "$filename"
+          echo "File saved as $filename"
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git config --local user.name "${{ secrets.GIT_USER_NAME }}"
+
+      - name: Commit and push changes
+        run: |
+          git add posts
+          git commit -m "Add new GPT response file"
+          git push
